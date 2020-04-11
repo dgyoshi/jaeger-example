@@ -1,0 +1,36 @@
+version: '3.5'
+
+services:
+  foo:
+    container_name: 'foo'
+    image: golang:1.13.8-alpine
+    environment:
+        FOO_HOST: foo
+        FOO_PROTOCOL: tcp
+        FOO_PORT: 9876
+        BAR_HOST: bar
+        BAR_PROTOCOL: tcp
+        BAR_PORT: 9877
+    tty: true
+    volumes: 
+      - ./:/opt
+    ports:
+      - "9876:9876"
+    working_dir: /opt
+    command: ["go", "run", "./cmd/foo/main.go"]
+
+  bar:
+    container_name: 'bar'
+    image: golang:1.13.8-alpine
+    environment:
+        FOO_HOST: foo
+        FOO_PROTOCOL: tcp
+        FOO_PORT: 9876
+        BAR_HOST: bar
+        BAR_PROTOCOL: tcp
+        BAR_PORT: 9877
+    tty: true
+    volumes: 
+      - ./:/opt
+    working_dir: /opt
+    command: ["go", "run", "./cmd/bar/main.go"]
