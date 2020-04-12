@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dgyoshi/jaeger-example/internal/pkg/interceptor"
-	"github.com/dgyoshi/jaeger-example/internal/pkg/logger"
+	interceptor_tracing "github.com/dgyoshi/jaeger-example/internal/pkg/interceptor/tracing"
+	"github.com/dgyoshi/jaeger-example/internal/pkg/log"
 	pb "github.com/dgyoshi/jaeger-example/internal/pkg/proto/echo"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
@@ -26,7 +26,7 @@ func NewClient(host, port string, tracer opentracing.Tracer) *EchoServiceClient 
 		)),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
 			grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(tracer)),
-			interceptor.OpenTracingUnaryClientInterceptor(),
+			interceptor_tracing.UnaryClientInterceptor(),
 		)))
 
 	if err != nil {
@@ -43,7 +43,7 @@ func NewClient(host, port string, tracer opentracing.Tracer) *EchoServiceClient 
 func (c *EchoServiceClient) Echo(ctx context.Context, msg string) (string, error) {
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "Call Echo")
 	defer sp.Finish()
-	logger.Info(ctx, "echo.client.Echo")
+	log.Infof(ctx, "echo.client.Echo")
 
 	res, err := c.client.Echo(ctx, &pb.EchoMsg{
 		Msg: msg,

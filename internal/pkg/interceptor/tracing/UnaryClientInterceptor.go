@@ -1,13 +1,13 @@
-package interceptor
+package tracing
 
 import (
 	"context"
 
-	"github.com/dgyoshi/jaeger-example/internal/pkg/logger"
+	"github.com/dgyoshi/jaeger-example/internal/pkg/log"
 	"google.golang.org/grpc"
 )
 
-func OpenTracingUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+func UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(
 		ctx context.Context,
 		method string,
@@ -17,7 +17,7 @@ func OpenTracingUnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		invoker grpc.UnaryInvoker,
 		opts ...grpc.CallOption) error {
 
-		logger.Info(ctx, "grpc.client")
+		log.Infof(ctx, "grpc.client")
 
 		err := invoker(ctx, method, req, reply, cc, opts...)
 

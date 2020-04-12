@@ -5,6 +5,7 @@ services:
     container_name: 'foo'
     image: golang:1.13.8-alpine
     environment:
+        ENV: development
         FOO_HOST: foo
         FOO_PROTOCOL: tcp
         FOO_PORT: 9876
@@ -12,11 +13,8 @@ services:
         BAR_PROTOCOL: tcp
         BAR_PORT: 9877
         JAEGER_SERVICE_NAME: jaeger-example
-        JAEGER_SAMPLER_TYPE: const
-        JAEGER_SAMPLER_PARAM: 1
         JAEGER_AGENT_HOST: jaeger-agent
         JAEGER_AGENT_PORT: 6831
-        JAEGER_REPORTER_LOG_SPANS: 1
         JAEGER_REPORTER_FLUSH_INTERVAL: 500ms
     tty: true
     volumes: 
@@ -30,6 +28,7 @@ services:
     container_name: 'bar'
     image: golang:1.13.8-alpine
     environment:
+        ENV: development
         FOO_HOST: foo
         FOO_PROTOCOL: tcp
         FOO_PORT: 9876
@@ -37,11 +36,8 @@ services:
         BAR_PROTOCOL: tcp
         BAR_PORT: 9877
         JAEGER_SERVICE_NAME: jaeger-example
-        JAEGER_SAMPLER_TYPE: const
-        JAEGER_SAMPLER_PARAM: 1
         JAEGER_AGENT_HOST: jaeger-agent
         JAEGER_AGENT_PORT: 6831
-        JAEGER_REPORTER_LOG_SPANS: 1
         JAEGER_REPORTER_FLUSH_INTERVAL: 500ms
     tty: true
     volumes: 
@@ -61,6 +57,7 @@ services:
       - "6831:6831/udp"
       - "6832:6832/udp"
       - "5778:5778"
+    restart: on-failure
     depends_on:
       - jaeger-collector
 
@@ -77,6 +74,7 @@ services:
       - "14268:14268"
       - "9411:9411"
       - "14269:14269"
+    restart: on-failure
     depends_on:
       - elastic
 
@@ -87,11 +85,13 @@ services:
     environment:
       discovery.type: single-node
       ES_JAVA_OPTS: -Xms512m -Xmx512m
+    restart: on-failure
     ports:
       - "9200:9200"
       - "9300:9300"
 
   jaeger-query:
+    container_name: 'jaeger-query'
     image: jaegertracing/jaeger-query:1.16
     environment:
       SPAN_STORAGE_TYPE: elasticsearch
