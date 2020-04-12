@@ -16,6 +16,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	"google.golang.org/grpc"
 )
 
@@ -36,10 +37,10 @@ func main() {
 
 	// initialize tracer
 	tracer, closer, err := tracer.NewTracer("Foo Service")
-	defer closer.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer closer.Close()
 
 	opentracing.SetGlobalTracer(tracer)
 
@@ -96,7 +97,7 @@ type server struct {
 	BarClient   *echo.EchoServiceClient
 }
 
-func (s *server) Echo(ctx context.Context, req *pb.EchoMsg) (*pb.EchoMsg, error) {
+func (s *server) Echo(ctx context.Context, req *pb.EchoMsg) (*pb.Reply, error) {
 	logger.Info(ctx, "foo.server.Echo")
 
 	msg := req.GetMsg()
@@ -106,8 +107,14 @@ func (s *server) Echo(ctx context.Context, req *pb.EchoMsg) (*pb.EchoMsg, error)
 	res, err := s.BarClient.Echo(ctx, msg)
 	if err != nil {
 		fmt.Println(err)
-		return &pb.EchoMsg{}, err
+		return &pb.Reply{}, err
 	}
 
-	return &pb.EchoMsg{Msg: res}, nil
+	sp := opentracing.SpanFromContext(ctx)
+	spc := sp.Context().(jaeger.SpanContext)
+
+	return &pb.Reply{
+		Msg:     res,
+		TraceId: spc.TraceID().String(),
+	}, nil
 }

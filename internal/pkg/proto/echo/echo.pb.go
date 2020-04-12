@@ -63,20 +63,70 @@ func (m *EchoMsg) GetMsg() string {
 	return ""
 }
 
+type Reply struct {
+	Msg                  string   `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
+	TraceId              string   `protobuf:"bytes,2,opt,name=trace_id,json=traceId,proto3" json:"trace_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Reply) Reset()         { *m = Reply{} }
+func (m *Reply) String() string { return proto.CompactTextString(m) }
+func (*Reply) ProtoMessage()    {}
+func (*Reply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_08134aea513e0001, []int{1}
+}
+
+func (m *Reply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Reply.Unmarshal(m, b)
+}
+func (m *Reply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Reply.Marshal(b, m, deterministic)
+}
+func (m *Reply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Reply.Merge(m, src)
+}
+func (m *Reply) XXX_Size() int {
+	return xxx_messageInfo_Reply.Size(m)
+}
+func (m *Reply) XXX_DiscardUnknown() {
+	xxx_messageInfo_Reply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Reply proto.InternalMessageInfo
+
+func (m *Reply) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+func (m *Reply) GetTraceId() string {
+	if m != nil {
+		return m.TraceId
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*EchoMsg)(nil), "echo.EchoMsg")
+	proto.RegisterType((*Reply)(nil), "echo.Reply")
 }
 
 func init() { proto.RegisterFile("echo.proto", fileDescriptor_08134aea513e0001) }
 
 var fileDescriptor_08134aea513e0001 = []byte{
-	// 90 bytes of a gzipped FileDescriptorProto
+	// 125 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4a, 0x4d, 0xce, 0xc8,
 	0xd7, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x01, 0xb1, 0x95, 0xa4, 0xb9, 0xd8, 0x5d, 0x93,
 	0x33, 0xf2, 0x7d, 0x8b, 0xd3, 0x85, 0x04, 0xb8, 0x98, 0x73, 0x8b, 0xd3, 0x25, 0x18, 0x15, 0x18,
-	0x35, 0x38, 0x83, 0x40, 0x4c, 0x23, 0x1d, 0x2e, 0x16, 0x90, 0xa4, 0x90, 0x0a, 0x94, 0xe6, 0xd5,
-	0x03, 0xeb, 0x87, 0x6a, 0x90, 0x42, 0xe5, 0x26, 0xb1, 0x81, 0xcd, 0x35, 0x06, 0x04, 0x00, 0x00,
-	0xff, 0xff, 0x95, 0x46, 0xa8, 0x83, 0x65, 0x00, 0x00, 0x00,
+	0x35, 0x38, 0x83, 0x40, 0x4c, 0x25, 0x13, 0x2e, 0xd6, 0xa0, 0xd4, 0x82, 0x9c, 0x4a, 0x4c, 0x29,
+	0x21, 0x49, 0x2e, 0x8e, 0x92, 0xa2, 0xc4, 0xe4, 0xd4, 0xf8, 0xcc, 0x14, 0x09, 0x26, 0xb0, 0x30,
+	0x3b, 0x98, 0xef, 0x99, 0x62, 0xa4, 0xc5, 0xc5, 0x02, 0x32, 0x52, 0x48, 0x09, 0x4a, 0xf3, 0xea,
+	0x81, 0x6d, 0x85, 0x5a, 0x23, 0xc5, 0x0d, 0xe1, 0x82, 0x0d, 0x4e, 0x62, 0x03, 0xbb, 0xc5, 0x18,
+	0x10, 0x00, 0x00, 0xff, 0xff, 0x3e, 0x0d, 0xd3, 0x0f, 0x99, 0x00, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -91,7 +141,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type EchoClient interface {
-	Echo(ctx context.Context, in *EchoMsg, opts ...grpc.CallOption) (*EchoMsg, error)
+	Echo(ctx context.Context, in *EchoMsg, opts ...grpc.CallOption) (*Reply, error)
 }
 
 type echoClient struct {
@@ -102,8 +152,8 @@ func NewEchoClient(cc *grpc.ClientConn) EchoClient {
 	return &echoClient{cc}
 }
 
-func (c *echoClient) Echo(ctx context.Context, in *EchoMsg, opts ...grpc.CallOption) (*EchoMsg, error) {
-	out := new(EchoMsg)
+func (c *echoClient) Echo(ctx context.Context, in *EchoMsg, opts ...grpc.CallOption) (*Reply, error) {
+	out := new(Reply)
 	err := c.cc.Invoke(ctx, "/echo.Echo/Echo", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -113,14 +163,14 @@ func (c *echoClient) Echo(ctx context.Context, in *EchoMsg, opts ...grpc.CallOpt
 
 // EchoServer is the server API for Echo service.
 type EchoServer interface {
-	Echo(context.Context, *EchoMsg) (*EchoMsg, error)
+	Echo(context.Context, *EchoMsg) (*Reply, error)
 }
 
 // UnimplementedEchoServer can be embedded to have forward compatible implementations.
 type UnimplementedEchoServer struct {
 }
 
-func (*UnimplementedEchoServer) Echo(ctx context.Context, req *EchoMsg) (*EchoMsg, error) {
+func (*UnimplementedEchoServer) Echo(ctx context.Context, req *EchoMsg) (*Reply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Echo not implemented")
 }
 

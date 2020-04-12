@@ -11,6 +11,13 @@ services:
         BAR_HOST: bar
         BAR_PROTOCOL: tcp
         BAR_PORT: 9877
+        JAEGER_SERVICE_NAME: jaeger-example
+        JAEGER_SAMPLER_TYPE: const
+        JAEGER_SAMPLER_PARAM: 1
+        JAEGER_AGENT_HOST: jaeger-agent
+        JAEGER_AGENT_PORT: 6831
+        JAEGER_REPORTER_LOG_SPANS: 1
+        JAEGER_REPORTER_FLUSH_INTERVAL: 500ms
     tty: true
     volumes: 
       - ./:/opt
@@ -29,8 +36,72 @@ services:
         BAR_HOST: bar
         BAR_PROTOCOL: tcp
         BAR_PORT: 9877
+        JAEGER_SERVICE_NAME: jaeger-example
+        JAEGER_SAMPLER_TYPE: const
+        JAEGER_SAMPLER_PARAM: 1
+        JAEGER_AGENT_HOST: jaeger-agent
+        JAEGER_AGENT_PORT: 6831
+        JAEGER_REPORTER_LOG_SPANS: 1
+        JAEGER_REPORTER_FLUSH_INTERVAL: 500ms
     tty: true
     volumes: 
       - ./:/opt
+    ports:
+      - "9877:9877"
     working_dir: /opt
     command: ["go", "run", "./cmd/bar/main.go"]
+
+  jaeger-agent:
+    container_name: 'jaeger-agent'
+    image: jaegertracing/jaeger-agent:1.16
+    command: ["--reporter.grpc.host-port=jaeger-collector:14250"]
+    tty: true
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+    depends_on:
+      - jaeger-collector
+
+  jaeger-collector:
+    container_name: 'jaeger-collector'
+    image: jaegertracing/jaeger-collector:1.16
+    tty: true
+    environment:
+      SPAN_STORAGE_TYPE: elasticsearch
+      ES_SERVER_URLS: http://elastic:9200
+    ports:
+      - "14267:14267"
+      - "14250:14250"
+      - "14268:14268"
+      - "9411:9411"
+      - "14269:14269"
+    depends_on:
+      - elastic
+
+  elastic:
+    container_name: 'elastic'
+    image: elasticsearch:7.6.2
+    tty: true
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  jaeger-query:
+    image: jaegertracing/jaeger-query:1.16
+    environment:
+      SPAN_STORAGE_TYPE: elasticsearch
+      ES_SERVER_URLS: http://elastic:9200
+      JAEGER_SERVICE_NAME: jaeger-query
+      JAEGER_AGENT_HOST: jaeger-agent
+      JAEGER_AGENT_PORT: 6831
+    ports:
+      - "16686:16686"
+      - "16687"
+    restart: on-failure
+    depends_on:
+      - elastic

@@ -16,6 +16,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	"google.golang.org/grpc"
 )
 
@@ -89,9 +90,15 @@ type server struct {
 	EchoService *echo.Service
 }
 
-func (s *server) Echo(ctx context.Context, req *pb.EchoMsg) (*pb.EchoMsg, error) {
+func (s *server) Echo(ctx context.Context, req *pb.EchoMsg) (*pb.Reply, error) {
 	logger.Info(ctx, "bar.server.Echo")
 	s.EchoService.EchoDelay(ctx, req.GetMsg())
 
-	return req, nil
+	sp := opentracing.SpanFromContext(ctx)
+	spc := sp.Context().(jaeger.SpanContext)
+
+	return &pb.Reply{
+		Msg:     req.GetMsg(),
+		TraceId: spc.TraceID().String(),
+	}, nil
 }
